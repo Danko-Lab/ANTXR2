@@ -1,0 +1,51 @@
+#make human index
+wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/genes/hg19.ncbiRefSeq.gtf.gz
+wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.fa.gz
+
+gunzip hg19.ncbiRefSeq.gtf.gz
+gunzip hg19.fa.gz
+gffread -w hg19_transcripts_ncbi.fa -g ./hg19.fa hg19.ncbiRefSeq.chr4.gtf
+salmon index -t ./hg19_transcripts_ncbi.fa -i human_index
+
+
+#make rhesus index
+wget https://hgdownload.soe.ucsc.edu/goldenPath/rheMac10/bigZips/rheMac10.fa.gz
+wget https://hgdownload.soe.ucsc.edu/goldenPath/rheMac10/bigZips/genes/rheMac10.ncbiRefSeq.gtf.gz
+
+gunzip rheMac10.fa.gz
+gunzip rheMac10.ncbiRefSeq.gtf.gz
+gffread -w rheMac10_transcripts_ncbi.fa -g ./rheMac10.fa rheMac10.ncbiRefSeq.gtf
+salmon index -t ./rheMac10_transcripts_ncbi.fa -i rhesus_index
+
+#make baboon index
+
+wget https://hgdownload.soe.ucsc.edu/goldenPath/papAnu4/bigZips/genes/papAnu4.ncbiRefSeq.gtf.gz
+wget https://hgdownload.soe.ucsc.edu/goldenPath/papAnu4/bigZips/papAnu4.fa.gz
+gunzip papAnu4.ncbiRefSeq.gtf.gz
+gunzip papAnu4.fa.gz
+
+gffread -w papanu4_transcripts_ncbi.fa -g ./papAnu4.fa papAnu4.ncbiRefSeq.gtf
+salmon index -t ./papanu4_transcripts_ncbi.fa -i papanu4_index
+
+
+
+#INDEX=human for all samples, rhesus or baboon for reciprocal comparisons
+for SRR in *.fastq.gz
+do
+  echo $SRR
+  f=`echo $SRR | cut -d \. -f 1`
+  echo $f
+  mkdir $f
+ export PATH=/programs/salmon-0.14.1/bin:$PATH
+ salmon quant -i INDEX -l A -r ./$f.fastq.gz -p 8 --validateMappings --output ./$f
+done
+
+
+#extract correct ANTXR2 transcript for human
+for file in 'ls SRR*'
+do
+name='echo $file'
+cd $name
+cat quant.sf | grep 'NM_001145794.1' | awk '{print $file, $0}'
+cd ..
+done
