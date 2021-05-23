@@ -1,0 +1,13 @@
+#intersect of encode peaks with region of interest upstream of ANTXR2
+
+#function to get peak file names and number of peaks that overlap with sweep region
+touch overlap_number.txt
+touch overlap_names.txt
+FILES=`ls *.bed.gz`
+function intersect {
+for f in $FILES
+ do 
+echo $f >> overlap_names.txt
+bedtools intersect -a sweep.bed -b $f -c >> overlap_number.txt
+done
+}
