@@ -1,0 +1,30 @@
+#CROSSMAP RHESUS TO HG19 HIC
+#make 2 files from merged_nodups
+awk 'BEGIN{OFS="\t";}{if($1==0) print $2,$3,$3+1,"+",NR; else print $2,$3,$3,"-",NR}' /home/danko_0001/projects/gb446/juicer/work/Rhesus_CD4_contactFiles/mega/aligned/merged_nodups.txt > /home/danko_0001/projects/lac334/rhesus_merged_nodups_read1.bed
+
+awk 'BEGIN{OFS="\t";}{if($5==0) print $6,$7,$7+1,"+",NR; else print $6,$7,$7,"-",NR}' /home/danko_0001/projects/gb446/juicer/work/Rhesus_CD4_contactFiles/mega/aligned/merged_nodups.txt > /home/danko_0001/projects/lac334/rhesus_merged_nodups_read2.bed
+
+
+
+#cross map two files
+
+/home/lac334/lib/CrossMap/usr/bin/CrossMap.py bed /home/danko_0001/projects/lac334/rheMac10ToHg19.over.chain.gz /home/danko_0001/projects/lac334/rhesus_merged_nodups_read1.bed /home/danko_0001/projects/lac334/rhesus_merged_nodups_read1_hg19.bed
+
+/home/lac334/lib/CrossMap/usr/bin/CrossMap.py bed /home/danko_0001/projects/lac334/rheMac10ToHg19.over.chain.gz /home/danko_0001/projects/lac334/rhesus_merged_nodups_read2.bed /home/danko_0001/projects/lac334/rhesus_merged_nodups_read2_hg19.bed
+
+
+#combine two crossmapped files based on index
+awk -F'\t' 'NR == FNR {a[$5]=$0; next} {a[$5]; b[$5]=$0} END{for (id in b) print a[id], b[id]}' OFS='\t' /home/danko_0001/projects/lac334/rhesus_merged_nodups_read1_hg19.bed /home/danko_0001/projects/lac334/rhesus_merged_nodups_read2_hg19.bed | awk '{if (NF ==10) print $0}' > combined.bed
+
+awk -F'\t' '{print 0,$1,$2,0,0,$6,$7,1}' OFS=' ' combined.bed > rhesus_merged_nodups_full_hg19.txt
+
+rm combined.bed
+
+#sort files
+awk '{if ($2 > $5){ print $5,$6,$7,$8,$1,$2,$3,$4}else {print}}' rhesus_merged_nodups_full_hg19.txt  > rhesus_merged_nodups_full_hg19_1.txt
+sort -k2,2d -k6,6d rhesus_merged_nodups_full_hg19_1.txt > rhesus_merged_nodups_full_hg19_2.txt
+
+rm rhesus_merged_nodups_full_hg19_1.txt
+
+#run pre to hic file
+java -Xms64g -Xmx128g -jar juicer_tools_1.19.02.jar pre /home/danko_0001/projects/lac334/rhesus_merged_nodups_full_hg19_2.txt rhesus_full_hg19.hic hg19 -d

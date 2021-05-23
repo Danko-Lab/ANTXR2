@@ -1,0 +1,6 @@
+#alignment commmand
+juicer.sh -z genome.fa.gz -p chrom.sizes -y /species_MboI.txt -s noneMboI
+
+
+#mega function
+/opt/juicer/scripts/mega.sh -g hg19
